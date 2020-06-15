@@ -48,11 +48,12 @@ typedef CGAL::Straight_skeleton_2<Kernel>  Straight_skeleton_2 ;
 namespace { // anonymous
 
 template<class K, bool outputDistanceInM>
-void straightSkeletonToMultiLineString(
-    const CGAL::Straight_skeleton_2<K>& ss,
-    MultiLineString& result,
-    bool innerOnly,
-    Kernel::Vector_2& translate
+void straightSkeletonToMultiLineString( const CGAL::Straight_skeleton_2<K>& ss
+                                      , MultiLineString& result
+                                      , bool innerOnly
+#if 0
+                                      , Kernel::Vector_2& translate
+#endif
 )
 {
     typedef CGAL::Straight_skeleton_2<K> Ss ;
@@ -91,7 +92,9 @@ void straightSkeletonToMultiLineString(
         else {
             ls = new LineString( it->opposite()->vertex()->point(), it->vertex()->point() );
         }
+#if 0
         algorithm::translate( *ls, translate );
+#endif
         result.addGeometry( ls );
     }
 }
@@ -301,8 +304,12 @@ std::unique_ptr< MultiLineString > straightSkeleton( const Polygon& g, bool /*au
         return result ;
     }
 
+#if 0
     Kernel::Vector_2 trans;
     Polygon_with_holes_2 polygon = preparePolygon( g, trans );
+#else
+    Polygon_with_holes_2 polygon = g.toPolygon_with_holes_2();
+#endif
     boost::shared_ptr< Straight_skeleton_2 > skeleton =
         straightSkeleton( polygon );
 
@@ -311,9 +318,17 @@ std::unique_ptr< MultiLineString > straightSkeleton( const Polygon& g, bool /*au
     }
 
     if ( outputDistanceInM )
+#if 0
         straightSkeletonToMultiLineString<Kernel, true> ( *skeleton, *result, innerOnly, trans ) ;
-    else
+#else
+        straightSkeletonToMultiLineString<Kernel, true> ( *skeleton, *result, innerOnly);
+#endif
+        else
+#if 0
         straightSkeletonToMultiLineString<Kernel, false> ( *skeleton, *result, innerOnly, trans ) ;
+#else
+        straightSkeletonToMultiLineString<Kernel, true> ( *skeleton, *result, innerOnly);
+#endif
     return result ;
 }
 
@@ -326,8 +341,12 @@ std::unique_ptr< MultiLineString > straightSkeleton( const MultiPolygon& g, bool
     std::unique_ptr< MultiLineString > result( new MultiLineString );
 
     for ( size_t i = 0; i < g.numGeometries(); i++ ) {
+#if 0
         Kernel::Vector_2 trans;
         Polygon_with_holes_2 polygon = preparePolygon( g.polygonN( i ), trans );
+#else
+        Polygon_with_holes_2 polygon = g.polygonN( i ).toPolygon_with_holes_2();
+#endif
         boost::shared_ptr< Straight_skeleton_2 > skeleton = straightSkeleton( polygon ) ;
 
         if ( !skeleton.get() ) {
@@ -335,9 +354,17 @@ std::unique_ptr< MultiLineString > straightSkeleton( const MultiPolygon& g, bool
         }
 
         if ( outputDistanceInM )
+#if 0
             straightSkeletonToMultiLineString<Kernel, true>( *skeleton, *result, innerOnly, trans ) ;
-        else
+#else
+            straightSkeletonToMultiLineString<Kernel, true>( *skeleton, *result, innerOnly);
+#endif
+            else
+#if 0
             straightSkeletonToMultiLineString<Kernel, false>( *skeleton, *result, innerOnly, trans ) ;
+#else
+            straightSkeletonToMultiLineString<Kernel, false>( *skeleton, *result, innerOnly);
+#endif
     }
 
     return result ;
